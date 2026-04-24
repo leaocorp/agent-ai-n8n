@@ -1,0 +1,73 @@
+COMO OBTER O @USERNAME DO INSTAGRAM A PARTIR DO IGSID
+======================================================
+
+O webhook da Meta entrega apenas o sender_id — um ID numérico chamado IGSID
+(Instagram Scoped User ID). Para resolver esse ID em um @username legível,
+é necessária uma chamada adicional à Graph API.
+
+EXEMPLO DE RESULTADO OBTIDO EM PRODUÇÃO
+----------------------------------------
+sender_id : 2543316279399689
+username  : joaopaulor_
+name      : João Paulo
+
+
+A REQUISIÇÃO
+------------
+Método : GET
+URL    : https://graph.instagram.com/v22.0/{IGSID}
+
+Parâmetros de query:
+  fields       = name,username
+  access_token = {META_PAGE_ACCESS_TOKEN}
+
+URL completa (exemplo):
+  https://graph.instagram.com/v22.0/2543316279399689?fields=name,username&access_token=SEU_TOKEN
+
+
+EXEMPLO COM curl
+----------------
+curl "https://graph.instagram.com/v22.0/2543316279399689?fields=name,username&access_token=SEU_TOKEN"
+
+
+RESPOSTA ESPERADA (JSON)
+------------------------
+{
+  "name": "João Paulo",
+  "username": "joaopaulor_",
+  "id": "2543316279399689"
+}
+
+
+CAMPOS DISPONÍVEIS NO MESMO ENDPOINT
+--------------------------------------
+Você pode pedir outros campos adicionando-os em `fields` separados por vírgula:
+
+  fields=name,username,profile_pic,follower_count,is_verified_user
+
+Atenção: nem todos os campos estão disponíveis dependendo das permissões
+do seu app Meta. Os testados e funcionais são `name` e `username`.
+
+
+PERMISSÕES NECESSÁRIAS
+-----------------------
+O app Meta precisa ter aprovada a permissão:
+
+  instagram_manage_messages
+
+Em modo de desenvolvimento do app, a chamada só funciona para contas de
+teste cadastradas explicitamente no painel de desenvolvedores Meta.
+Em produção (app aprovado), funciona para qualquer usuário.
+
+
+ONDE ISSO ESTÁ IMPLEMENTADO NO PROJETO
+---------------------------------------
+Arquivo : execution/instagram_receiver.py
+Método  : InstagramReceiver.fetch_sender_username(sender_id, page_access_token)
+
+O método é chamado de forma fire-and-forget em message_processor.py (step 5),
+logo após as verificações de bloqueio. Ele não bloqueia o pipeline principal —
+se a chamada falhar por qualquer motivo, o erro é logado e o fluxo continua.
+
+Para ler o resultado nos logs do Modal:
+  modal app logs agent-ai-dr-antonio | grep sender_username_resolved
