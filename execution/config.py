@@ -51,6 +51,8 @@ class Config:
     chat_history_table: str = "ias_chat_histories_drantonio"
     # Quantidade máxima de mensagens antigas carregadas para dar contexto ao modelo.
     context_window_length: int = 50
+    # ID do estabelecimento (usado para buscar serviços e agendas)
+    establishment_id: str = ""
 
     # ==========================================
     # Cache e Gerenciamento de Estado (Redis)
@@ -111,6 +113,8 @@ def get_config() -> Config:
         supabase_url=os.getenv("SUPABASE_URL", ""),
         supabase_key=os.getenv("SUPABASE_KEY", ""),
         supabase_db_url=os.getenv("SUPABASE_DB_URL", ""),
+        establishment_id=os.getenv("ESTABLISHMENT_ID", ""),
+        agendamento_url: str = os.getenv("AGENDAMENTO_URL", ""),
         redis_url=os.getenv("REDIS_URL", ""),
         blocked_sender_ids=frozenset(s.strip() for s in blocked.split(",") if s.strip()),
         admin_sender_ids=frozenset(s.strip() for s in admin.split(",") if s.strip()),
